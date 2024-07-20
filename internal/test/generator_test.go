@@ -96,3 +96,50 @@ func (t *TestSuite) TestCallbackFuncReturnsError() {
 	t.Equal(1, callbackMock.initCalled)
 	t.Equal(1, callbackMock.called)
 }
+
+func (t *TestSuite) TestDeferCalled() {
+	callbackMock := newCallbackMock()
+
+	g := generator.New(callbackMock.callbackFunc)
+	g.SetDeferFunc(callbackMock.deferFunc)
+
+	i := 0
+	for res := range g.Next() {
+		t.True(res.(bool))
+		i++
+	}
+
+	t.Nil(g.GetLastError())
+	t.Nil(callbackMock.params)
+	t.Equal(5, i)
+	t.Equal(0, callbackMock.initCalled)
+	t.Equal(6, callbackMock.called)
+	t.Equal(1, callbackMock.deferCalled)
+}
+
+func (t *TestSuite) TestDeferCalledIfInitFunctionErrored() {
+	callbackMock := newCallbackMock().withInitError(fmt.Errorf("init error"))
+
+	g := generator.New(callbackMock.callbackFunc)
+	g.SetInitFunc(callbackMock.initFunc)
+	g.SetDeferFunc(callbackMock.deferFunc)
+
+	for res := range g.Next() {
+		t.True(res.(bool))
+	}
+
+	t.Equal(1, callbackMock.deferCalled)
+}
+
+func (t *TestSuite) TestDeferCalledIfCallbackFunctionErrored() {
+	callbackMock := newCallbackMock().withCallbackError(fmt.Errorf("callback error"))
+
+	g := generator.New(callbackMock.callbackFunc)
+	g.SetDeferFunc(callbackMock.deferFunc)
+
+	for res := range g.Next() {
+		t.True(res.(bool))
+	}
+
+	t.Equal(1, callbackMock.deferCalled)
+}

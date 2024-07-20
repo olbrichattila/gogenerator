@@ -4,12 +4,16 @@ package gogenerator
 // Generator interface defines the iterator
 type Generator interface {
 	SetInitFunc(InitFunc)
+	SetDeferFunc(DeferFunc)
 	Next() <-chan interface{}
 	GetLastError() error
 }
 
 // InitFunc is the type of the function which will be called when iteration starts (once)
 type InitFunc func(...interface{}) ([]interface{}, error)
+
+// DeferFunc is the type of the function which will be called when iteration is over, or errored out
+type DeferFunc func(...interface{}) error
 
 // CallbackFunc is the callback function format which will be called for each iteration
 type CallbackFunc func(int, ...interface{}) (interface{}, error)
@@ -26,6 +30,7 @@ func New(f CallbackFunc, params ...interface{}) Generator {
 type IterateGenerator struct {
 	initFunc       InitFunc
 	initFuncResult []interface{}
+	deferFunc      DeferFunc
 	params         []interface{}
 	callbackFunc   CallbackFunc
 	err            error
@@ -34,6 +39,11 @@ type IterateGenerator struct {
 // SetInitFunc can be called with a callback function, which will be called once, and the result will be passed to the callback as params
 func (g *IterateGenerator) SetInitFunc(fn InitFunc) {
 	g.initFunc = fn
+}
+
+// SetDeferFunc can be called with a callback function, which will be called once at the end of the iteration, or error
+func (g *IterateGenerator) SetDeferFunc(fn DeferFunc) {
+	g.deferFunc = fn
 }
 
 // Next is to be used in the for loop for res := range generator.Next()
@@ -48,6 +58,12 @@ func (g *IterateGenerator) Next() <-chan interface{} {
 			g.initFuncResult, err = g.initFunc(g.params...)
 			if err != nil {
 				g.err = err
+				if g.deferFunc != nil {
+					err = g.deferFunc(g.params...)
+					if err != nil {
+						g.err = err
+					}
+				}
 				return
 			}
 		}
@@ -63,12 +79,19 @@ func (g *IterateGenerator) Next() <-chan interface{} {
 			ch <- res
 			i++
 		}
+
+		if g.deferFunc != nil {
+			err := g.deferFunc(g.params...)
+			if err != nil {
+				g.err = err
+			}
+		}
 	}()
 
 	return ch
 }
 
-// Error returns any error encountered during initialization or iteration
+// GetLastError returns any error encountered during initialization or iteration
 func (g *IterateGenerator) GetLastError() error {
 	return g.err
 }

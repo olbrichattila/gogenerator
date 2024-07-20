@@ -8,9 +8,11 @@ func newCallbackMock() *callbackMock {
 type callbackMock struct {
 	params      []interface{}
 	initCalled  int
+	deferCalled int
 	called      int
 	initErr     error
 	callbackErr error
+	deferErr    error
 }
 
 func (c *callbackMock) callbackFunc(i int, params ...interface{}) (interface{}, error) {
@@ -36,4 +38,9 @@ func (c *callbackMock) withCallbackError(err error) *callbackMock {
 func (c *callbackMock) initFunc(_ ...interface{}) ([]interface{}, error) {
 	c.initCalled++
 	return []interface{}{1, 2, 3}, c.initErr
+}
+
+func (c *callbackMock) deferFunc(_ ...interface{}) error {
+	c.deferCalled++
+	return c.deferErr
 }
