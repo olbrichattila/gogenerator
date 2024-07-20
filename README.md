@@ -1,7 +1,8 @@
 # Golang generator
 
-> The code provides a mechanism to create a generator in Go that can be used to process elements via callbacks, suitable for handling tasks such as processing large files or databases.
+> The code provides a mechanism to create a generator in Go that can be used to process elements via callbacks, suitable for handling tasks such as processing large files or databases. If you are familiar with PHP Generator, it is possible to achieve similar result.
 
+`Note: The next version of golang plans to release a similar iterator with yield`
 
 ## Functions
 - SetInitFunc(InitFunc)
