@@ -6,22 +6,34 @@ func newCallbackMock() *callbackMock {
 }
 
 type callbackMock struct {
-	params     []interface{}
-	initCalled int
-	called     int
+	params      []interface{}
+	initCalled  int
+	called      int
+	initErr     error
+	callbackErr error
 }
 
-func (c *callbackMock) callbackFunc(i int, params ...interface{}) interface{} {
+func (c *callbackMock) callbackFunc(i int, params ...interface{}) (interface{}, error) {
 	c.params = params
 	c.called++
 	if i >= 5 {
-		return nil
+		return nil, nil
 	}
 
-	return true
+	return true, c.callbackErr
 }
 
-func (c *callbackMock) initFunc(_ ...interface{}) []interface{} {
+func (c *callbackMock) withInitError(err error) *callbackMock {
+	c.initErr = err
+	return c
+}
+
+func (c *callbackMock) withCallbackError(err error) *callbackMock {
+	c.callbackErr = err
+	return c
+}
+
+func (c *callbackMock) initFunc(_ ...interface{}) ([]interface{}, error) {
 	c.initCalled++
-	return []interface{}{1, 2, 3}
+	return []interface{}{1, 2, 3}, c.initErr
 }
