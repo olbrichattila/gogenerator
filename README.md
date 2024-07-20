@@ -208,11 +208,11 @@ func initFunc(params ...interface{}) ([]interface{}, error) {
 		return nil, err
 	}
 
-	return []interface{}{db, rows}, nil
+	return []interface{}{db, stmt, rows}, nil
 }
 
 func deferFunc(params ...interface{}) error {
-	if len(params) != 2 {
+	if len(params) != 3 {
 		return fmt.Errorf("two parameter required in defer func")
 	}
 
@@ -233,13 +233,13 @@ func deferFunc(params ...interface{}) error {
 }
 
 func callback(i int, params ...interface{}) (interface{}, error) {
-	if len(params) != 2 {
+	if len(params) != 3 {
 		return nil, fmt.Errorf("two parameter required in callback")
 	}
 
-	rows, ok := params[1].(*sql.Rows)
+	rows, ok := params[2].(*sql.Rows)
 	if !ok {
-		return nil, fmt.Errorf("parameter 2 is not *sql.Stmt")
+		return nil, fmt.Errorf("parameter 2 is not *sql.Rows")
 	}
 
 	hasNextRow := rows.Next()
@@ -252,4 +252,5 @@ func callback(i int, params ...interface{}) (interface{}, error) {
 
 	return vehicle, nil
 }
+
 ```
