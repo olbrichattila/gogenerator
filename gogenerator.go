@@ -59,7 +59,7 @@ func (g *IterateGenerator) Next() <-chan interface{} {
 			if err != nil {
 				g.err = err
 				if g.deferFunc != nil {
-					err = g.deferFunc(g.params...)
+					err = g.deferFunc(g.initFuncResult...)
 					if err != nil {
 						g.err = err
 					}
@@ -81,7 +81,7 @@ func (g *IterateGenerator) Next() <-chan interface{} {
 		}
 
 		if g.deferFunc != nil {
-			err := g.deferFunc(g.params...)
+			err := g.deferFunc(g.initFuncResult...)
 			if err != nil {
 				g.err = err
 			}
